@@ -1,4 +1,5 @@
 import { pgTable, pgEnum, varchar, text, integer, timestamp } from 'drizzle-orm/pg-core';
+import { eq } from 'drizzle-orm';
 import { db } from '../config/db.js';
 
 export const userStatusEnum = pgEnum('user_status', ['pending', 'approved', 'rejected']);
@@ -22,4 +23,8 @@ export const createUser = async data => {
       name: UserTable.name,
       email: UserTable.email,
     });
+};
+
+export const findUserByEmail = async email => {
+  return await db.select().from(UserTable).where(eq(UserTable.email, email));
 };

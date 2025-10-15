@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
-import { createUser } from '../models/user.model.js';
+import jwt from 'jsonwebtoken';
+import { createUser, findUserByEmail } from '../models/user.model.js';
 
 export const registerController = async (request, response) => {
   try {
@@ -27,10 +28,29 @@ export const registerController = async (request, response) => {
 
 export const loginController = async (request, response) => {
   try {
+    const user = await findUserByEmail(request.validatedData.email);
+    if (!user.length) {
+      return response.status(400).json({
+        success: false,
+        message: 'Incorect email or password',
+      });
+    }
+    const result = await bcrypt.compare(request.validatedData.password, user[0].password);
+    if (!result) {
+      return response.status(400).json({
+        success: false,
+        message: 'Incorect email or password',
+      });
+    }
+
+    const token = jwt.sign({ id: user[0].id, email: user[0].email }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
     return response.status(200).json({
       success: true,
       message: 'User loged in successfuly.',
-      token: '',
+      token,
     });
   } catch (error) {
     console.log(error);
