@@ -5,12 +5,13 @@ import {
   getMeController,
 } from '../controllers/auth.controllers.js';
 import { handleValidate } from '../middlewares/handleValidate.js';
+import { authMe } from '../middlewares/authMe.js';
 import { RegisterSchema, LoginSchema } from '../validations/auth.validations.js';
 
 const router = Router();
 
 router.post('/register', handleValidate(RegisterSchema), registerController);
 router.post('/login', handleValidate(LoginSchema), loginController);
-router.get('/me', getMeController);
+router.get('/me', authMe, getMeController);
 
 export default router;

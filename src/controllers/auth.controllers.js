@@ -63,10 +63,15 @@ export const loginController = async (request, response) => {
 
 export const getMeController = async (request, response) => {
   try {
+    const user = await findUserByEmail(request.user.email);
     return response.status(200).json({
       success: true,
-      data: {},
-      token: '',
+      data: {
+        id: user[0].id,
+        name: user[0].name,
+        email: user[0].email,
+        status: user[0].status,
+      },
     });
   } catch (error) {
     console.log(error);
