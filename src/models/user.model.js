@@ -12,3 +12,14 @@ export const UserTable = pgTable('User', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const createUser = async data => {
+  return await db
+    .insert(UserTable)
+    .values({ ...data })
+    .returning({
+      id: UserTable.id,
+      name: UserTable.name,
+      email: UserTable.email,
+    });
+};

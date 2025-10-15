@@ -14,5 +14,9 @@ export const createApplication = async data => {
   return await db
     .insert(ApplicationTable)
     .values({ ...data })
-    .returning();
+    .returning({
+      id: ApplicationTable.id,
+      name: ApplicationTable.name,
+      phoneNumber: ApplicationTable.phoneNumber,
+    });
 };
