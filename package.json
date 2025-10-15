@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.37.0",
+    "drizzle-kit": "^0.31.5",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -23,9 +24,11 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.6",
     "express": "^5.1.0",
     "morgan": "^1.10.1",
     "nodemon": "^3.1.10",
+    "pg": "^8.16.3",
     "zod": "^4.1.12"
   }
 }
