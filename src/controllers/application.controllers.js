@@ -19,12 +19,9 @@ export const createApplicationController = async (request, response) => {
 
 export const getApplicationsController = async (request, response) => {
   try {
-    let page = parseInt(request.query.page || 1);
-    let page_size = parseInt(request.query.page_size || 10);
-    if (page < 1) page = 1;
-    if (page_size < 1) page_size = 10;
+    const queryData = request.validatedData;
+    const { data, pagination } = await getApplications(queryData.page, queryData.page_size);
 
-    const { data, pagination } = await getApplications(page, page_size);
     return response.status(200).json({
       success: true,
       data,

@@ -1,8 +1,13 @@
 import z from 'zod';
 
-export const handleValidate = validateSchema => {
+export const handleValidate = (validateSchema, query = false) => {
   return (request, response, next) => {
-    const result = validateSchema.safeParse(request.body);
+    let result;
+    if (query) {
+      result = validateSchema.safeParse(request.query);
+    } else {
+      result = validateSchema.safeParse(request.body);
+    }
 
     if (!result.success) {
       return response.status(400).json({
@@ -10,7 +15,6 @@ export const handleValidate = validateSchema => {
         message: z.prettifyError(result.error),
       });
     }
-
     request.validatedData = result.data;
     next();
   };

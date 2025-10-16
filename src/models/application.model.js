@@ -1,7 +1,6 @@
 import { integer, pgTable, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 import { db } from '../config/db.js';
-import { desc } from 'drizzle-orm';
-import { count } from 'drizzle-orm';
+import { desc, count } from 'drizzle-orm';
 
 export const ApplicationTable = pgTable('application', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
