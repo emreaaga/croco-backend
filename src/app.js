@@ -11,7 +11,7 @@ import userRouter from './routes/user.routes.js';
 
 const app = express();
 app.use(morgan('dev'));
-app.use(cors({ origin: process.env.CLIENT_URL }));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
