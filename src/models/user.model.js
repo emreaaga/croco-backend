@@ -1,5 +1,5 @@
 import { pgTable, pgEnum, varchar, text, integer, timestamp } from 'drizzle-orm/pg-core';
-import { eq } from 'drizzle-orm';
+import { eq, desc, count } from 'drizzle-orm';
 import { db } from '../config/db.js';
 
 export const userStatusEnum = pgEnum('user_status', ['pending', 'approved', 'rejected']);
@@ -27,4 +27,42 @@ export const createUser = async data => {
 
 export const findUserByEmail = async email => {
   return await db.select().from(UserTable).where(eq(UserTable.email, email));
+};
+
+export const findUserById = async user_id => {
+  return await db.select().from(UserTable).where(eq(UserTable.id, user_id));
+};
+
+export const getUsers = async (page = 1, page_size = 4) => {
+  const offset = (page - 1) * page_size;
+  const data = await db
+    .select({
+      id: UserTable.id,
+      name: UserTable.name,
+      email: UserTable.email,
+      status: UserTable.status,
+      createdAt: UserTable.createdAt,
+      updatedAt: UserTable.updatedAt,
+    })
+    .from(UserTable)
+    .orderBy(desc(UserTable.createdAt))
+    .limit(page_size)
+    .offset(offset);
+
+  const totalResult = await db.select({ count: count() }).from(UserTable);
+  const total = Number(totalResult[0].count);
+
+  const totalPages = Math.ceil(total / page_size);
+  const hasNext = page < totalPages;
+
+  return {
+    data,
+    pagination: {
+      total,
+      totalPages,
+      hasNext,
+      page,
+      page_size,
+    },
+  };
 };

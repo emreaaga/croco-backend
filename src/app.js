@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 
 import applicationRouter from './routes/application.routes.js';
 import authRouter from './routes/auth.routes.js';
+import userRouter from './routes/user.routes.js';
 
 const app = express();
 app.use(morgan('dev'));
@@ -23,5 +24,6 @@ app.use(
 
 app.use('/api/application', applicationRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter);
 
 export default app;

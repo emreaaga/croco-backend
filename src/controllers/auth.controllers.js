@@ -43,6 +43,13 @@ export const loginController = async (request, response) => {
       });
     }
 
+    if (user[0].status === 'pending' || user[0].status === 'rejected') {
+      return response.status(400).json({
+        success: false,
+        message: 'Wait until admin approve your account',
+      });
+    }
+
     const token = jwt.sign({ id: user[0].id, email: user[0].email }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
