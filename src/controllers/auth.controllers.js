@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail } from '../models/user.model.js';
+import { DrizzleQueryError } from 'drizzle-orm';
 
 export const registerController = async (request, response) => {
   try {
@@ -18,7 +19,13 @@ export const registerController = async (request, response) => {
       data: result,
     });
   } catch (error) {
-    console.log(error);
+    if (error instanceof DrizzleQueryError && error.cause.code === '23505') {
+      return response.status(409).json({
+        success: false,
+        message: 'This email is already registered. Please sign in.',
+        code: 'EMAIL_EXISTS',
+      });
+    }
     return response.status(500).json({
       success: false,
       message: 'Server error',

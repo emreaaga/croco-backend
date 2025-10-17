@@ -13,6 +13,7 @@ export const handleValidate = (validateSchema, query = false) => {
       return response.status(400).json({
         success: false,
         message: z.prettifyError(result.error),
+        code: 'VALIDATION_ERROR',
       });
     }
     request.validatedData = result.data;
