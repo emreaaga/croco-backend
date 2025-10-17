@@ -1,0 +1,1 @@
+ALTER TABLE "application" DROP CONSTRAINT "application_email_unique";

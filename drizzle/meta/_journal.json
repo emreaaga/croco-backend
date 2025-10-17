@@ -15,6 +15,13 @@
       "when": 1760555405316,
       "tag": "0001_milky_darwin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760684661991,
+      "tag": "0002_powerful_ravenous",
+      "breakpoints": true
     }
   ]
 }
