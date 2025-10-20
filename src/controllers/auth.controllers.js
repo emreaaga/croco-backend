@@ -61,10 +61,17 @@ export const loginController = async (request, response) => {
       expiresIn: '7d',
     });
 
+    response.cookie('access_token', token, {
+      httpOnly: true,
+      maxAge: 60 * 1000,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+
     return response.status(200).json({
       success: true,
       message: 'User loged in successfuly.',
-      token,
     });
   } catch (error) {
     console.log(error);

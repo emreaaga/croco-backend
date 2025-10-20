@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 import applicationRouter from './routes/application.routes.js';
 import authRouter from './routes/auth.routes.js';
@@ -11,7 +12,14 @@ import userRouter from './routes/user.routes.js';
 
 const app = express();
 app.use(morgan('dev'));
-app.use(cors({ origin: '*' }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
