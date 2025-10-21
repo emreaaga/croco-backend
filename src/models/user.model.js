@@ -30,7 +30,10 @@ export const findUserByEmail = async email => {
 };
 
 export const findUserById = async user_id => {
-  return await db.select().from(UserTable).where(eq(UserTable.id, user_id));
+  return await db
+    .select({ id: UserTable.id, name: UserTable.name, email: UserTable.email })
+    .from(UserTable)
+    .where(eq(UserTable.id, user_id));
 };
 
 export const getUsers = async (page = 1, page_size = 4) => {
