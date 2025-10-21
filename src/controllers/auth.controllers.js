@@ -63,7 +63,7 @@ export const loginController = async (request, response) => {
 
     response.cookie('access_token', token, {
       httpOnly: true,
-      maxAge: 5 * 60 * 1000,
+      maxAge: 10 * 60 * 1000,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
