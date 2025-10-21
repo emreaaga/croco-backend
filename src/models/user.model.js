@@ -1,5 +1,5 @@
 import { pgTable, pgEnum, varchar, text, integer, timestamp } from 'drizzle-orm/pg-core';
-import { eq, desc, count } from 'drizzle-orm';
+import { eq, desc, count, sql } from 'drizzle-orm';
 import { db } from '../config/db.js';
 
 export const userStatusEnum = pgEnum('user_status', ['pending', 'approved', 'rejected']);
@@ -68,4 +68,12 @@ export const getUsers = async (page = 1, page_size = 4) => {
       page_size,
     },
   };
+};
+
+export const changeUserStatus = async (user_id, user_status) => {
+  return db
+    .update(UserTable)
+    .set({ status: user_status, updatedAt: sql`NOW()` })
+    .where(eq(UserTable.id, user_id))
+    .returning({ id: UserTable.id, status: UserTable.status });
 };
