@@ -4,7 +4,6 @@
 CrocodilePay is a fintech platform designed to provide secure and scalable payment services.  
 The system consists of a **backend REST API** built with Express.js and a **frontend web application** powered by Next.js.
 
----
 
 ## 🚀 Tech Stack
 ### Backend
@@ -19,21 +18,6 @@ The system consists of a **backend REST API** built with Express.js and a **fron
 - **UI:** TailwindCSS + shadcn/ui + Lucide Icons
 - **HTTP Client:** Axios
 - **Notifications:** Sonner
-
----
-
-## ⚙️ Project Structure
-├── backend/ # Express.js REST API
-│ ├── src/
-│ ├── package.json
-│ └── ...
-├── frontend/ # Next.js App (UI)
-│ ├── app/
-│ ├── components/
-│ ├── package.json
-│ └── ...
-├── .gitignore
-└── README.md
 
 
 Run Backend
