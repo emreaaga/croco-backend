@@ -98,10 +98,11 @@ export const getMeController = async (request, response) => {
 
 export const logOutController = async (request, response) => {
   try {
-    response.clearCookie('access_token');
-    return response.status(200).json({
-      success: true,
-      message: 'Logged out successfully',
+    response.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
     });
   } catch (error) {
     console.log(error);
