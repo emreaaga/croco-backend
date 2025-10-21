@@ -1,3 +1,6 @@
+// 🔒 This middleware is currently unused.
+// It’s designed for stateful authorization methods (e.g., Bearer tokens in headers).
+
 import jwt from 'jsonwebtoken';
 
 export const authMe = async (request, response, next) => {
