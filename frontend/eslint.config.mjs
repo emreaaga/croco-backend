@@ -8,6 +8,7 @@ import securityPlugin from "eslint-plugin-security";
 import prettier from "eslint-plugin-prettier";
 import unicorn from "eslint-plugin-unicorn";
 import sonarjs from "eslint-plugin-sonarjs";
+import pluginNext from "eslint-plugin-next";
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -37,6 +38,7 @@ export default [
       unicorn: unicorn,
       react: pluginReact,
       sonarjs: sonarjs,
+      next: pluginNext,
     },
   },
   pluginJs.configs.recommended,
