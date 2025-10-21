@@ -44,7 +44,6 @@ export function RegisterForm() {
       toast.success("Регистрация прошла успешно, ожидайте одобрения модератора!");
       form.reset();
     } catch (error: any) {
-      console.error(error);
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {

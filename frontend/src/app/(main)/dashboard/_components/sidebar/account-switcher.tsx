@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
 import { useRouter } from "next/navigation";
-
 import { BadgeCheck, Bell, Settings, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,21 +13,21 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/axios";
-import { cn, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 
 export function AccountSwitcher({
-  users,
+  user,
 }: {
-  readonly users: ReadonlyArray<{
+  readonly user: {
     readonly id: string;
     readonly name: string;
     readonly email: string;
-    readonly avatar: string;
-    readonly role: string;
-  }>;
+    readonly avatar?: string | null;
+    readonly role?: string;
+  } | null;
 }) {
-  const [activeUser, setActiveUser] = useState(users[0]);
   const router = useRouter();
+
   const handleLogOut = async () => {
     try {
       await api.post("/auth/logout");
@@ -40,33 +37,52 @@ export function AccountSwitcher({
     }
   };
 
+  if (!user) {
+    return (
+      <Avatar className="size-9 rounded-lg">
+        <AvatarFallback className="rounded-lg">?</AvatarFallback>
+      </Avatar>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-9 rounded-lg">
-          <AvatarImage src={activeUser.avatar || undefined} alt={activeUser.name} />
-          <AvatarFallback className="rounded-lg">{getInitials(activeUser.name)}</AvatarFallback>
+        <Avatar className="size-9 rounded-lg cursor-pointer">
+          <AvatarImage
+            src={user.avatar || "/avatars/arhamkhnz.png"}
+            alt={user.name}
+          />
+          <AvatarFallback className="rounded-lg">
+            {getInitials(user.name)}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
-        {users.map((user) => (
-          <DropdownMenuItem
-            key={user.email}
-            className={cn("p-0", user.id === activeUser.id && "bg-accent/50 border-l-primary border-l-2")}
-            onClick={() => setActiveUser(user)}
-          >
-            <div className="flex w-full items-center justify-between gap-2 px-1 py-1.5">
-              <Avatar className="size-9 rounded-lg">
-                <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs capitalize">{user.role}</span>
-              </div>
-            </div>
-          </DropdownMenuItem>
-        ))}
+
+      <DropdownMenuContent
+        className="min-w-56 space-y-1 rounded-lg"
+        side="bottom"
+        align="end"
+        sideOffset={4}
+      >
+        <div className="flex w-full items-center gap-2 px-2 py-1.5">
+          <Avatar className="size-9 rounded-lg">
+            <AvatarImage
+              src={user.avatar || "/avatars/arhamkhnz.png"}
+              alt={user.name}
+            />
+            <AvatarFallback className="rounded-lg">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">{user.name}</span>
+            <span className="truncate text-xs capitalize text-muted-foreground">
+              {user.role || "administrator"}
+            </span>
+          </div>
+        </div>
+
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
@@ -79,7 +95,7 @@ export function AccountSwitcher({
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Bell />
-            Уведомление
+            Уведомления
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

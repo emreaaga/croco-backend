@@ -23,10 +23,25 @@ import { AccountSwitcher } from "./_components/sidebar/account-switcher";
 import { LayoutControls } from "./_components/sidebar/layout-controls";
 import { SearchDialog } from "./_components/sidebar/search-dialog";
 import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
+import { apiServer } from "@/lib/api-server";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
   const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+
+  let user = null;
+  try {
+    const res = await apiServer("/auth/me", {
+      headers: { Cookie: `access_token=${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      user = data.user;
+    }
+  } catch (e) {
+    console.error("Ошибка /auth/me:", e);
+  }
 
   const [sidebarVariant, sidebarCollapsible, contentLayout, navbarStyle] = await Promise.all([
     getPreference<SidebarVariant>("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
@@ -44,7 +59,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar variant={sidebarVariant} collapsible={sidebarCollapsible} />
+      <AppSidebar user={user} variant={sidebarVariant} collapsible={sidebarCollapsible} />
       <SidebarInset
         data-content-layout={contentLayout}
         className={cn(
@@ -71,7 +86,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             <div className="flex items-center gap-2">
               <LayoutControls {...layoutPreferences} />
               <ThemeSwitcher />
-              <AccountSwitcher users={users} />
+              <AccountSwitcher user={user} />
             </div>
           </div>
         </header>
