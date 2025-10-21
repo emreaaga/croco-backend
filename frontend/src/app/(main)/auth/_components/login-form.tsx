@@ -101,7 +101,7 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button className="w-full" type="submit">
+        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" type="submit">
           Войти
         </Button>
       </form>
