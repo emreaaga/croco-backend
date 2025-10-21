@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import { useRouter } from "next/navigation";
+
 import {
   ColumnDef,
   flexRender,
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/axios";
+import { toast } from "sonner";
 
 export type User = {
   id: number;
@@ -113,14 +116,26 @@ export default function UsersPage() {
   const [users, setUsers] = React.useState<User[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const router = useRouter();
 
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
+        setLoading(true);
         const res = await api.get("/users");
-        if (res.data.success) setUsers(res.data.data);
-      } catch (err) {
-        console.error("Ошибка загрузки пользователей:", err);
+        if (res.data.success) {
+          setUsers(res.data.data);
+        } else {
+          console.error("Ошибка при получении данных:", res.data);
+        } 
+      } catch (err: any) {
+        if (err.response?.status === 401) {
+          api.post("/auth/logout");
+          toast.info("Сессия истекла. Войдите снова.");
+          router.replace("/dashboard/login");
+        } else {
+          console.error("Ошибка запроса:", err);
+        }
       } finally {
         setLoading(false);
       }
