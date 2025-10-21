@@ -32,8 +32,8 @@ app.use(
   })
 );
 
-app.use('/api/application', applicationRouter);
+app.use('/api/applications', applicationRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/user', userRouter);
+app.use('/api/users', userRouter);
 
 export default app;

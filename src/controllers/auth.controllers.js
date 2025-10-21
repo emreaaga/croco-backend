@@ -63,7 +63,7 @@ export const loginController = async (request, response) => {
 
     response.cookie('access_token', token, {
       httpOnly: true,
-      maxAge: 60 * 1000,
+      maxAge: 5 * 60 * 1000,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -93,6 +93,22 @@ export const getMeController = async (request, response) => {
         email: user[0].email,
         status: user[0].status,
       },
+    });
+  } catch (error) {
+    console.log(error);
+    return response.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+export const logOutController = async (request, response) => {
+  try {
+    response.clearCookie('access_token');
+    return response.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
     });
   } catch (error) {
     console.log(error);

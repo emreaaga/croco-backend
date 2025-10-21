@@ -11,6 +11,6 @@ import PaginateValidation from '../validations/query.validations.js';
 const router = Router();
 
 router.post('/', handleValidate(ApplicationSchema), createApplicationController);
-router.get('/', authMe, handleValidate(PaginateValidation, true), getApplicationsController);
+router.get('/', handleValidate(PaginateValidation, true), getApplicationsController);
 
 export default router;
