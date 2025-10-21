@@ -5,7 +5,6 @@ import { GoogleButton } from "../_components/social-auth/google-button";
 export default function LoginV1() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-100 px-4">
-      {/* Контейнер формы */}
       <div className="w-full max-w-md rounded-xl border bg-white/80 backdrop-blur-md p-6 shadow-lg hover:shadow-xl transition">
         <div className="text-center space-y-2 mb-6">
           <h1 className="text-2xl font-bold text-emerald-800">Вход</h1>

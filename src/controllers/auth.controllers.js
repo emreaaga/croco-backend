@@ -65,6 +65,7 @@ export const loginController = async (request, response) => {
       httpOnly: true,
       maxAge: 10 * 60 * 1000,
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
