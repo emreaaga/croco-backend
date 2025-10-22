@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail, findUserById } from '../models/user.model.js';
 import { DrizzleQueryError } from 'drizzle-orm';
+import { httpUrl } from 'zod';
 
 export const registerController = async (request, response) => {
   try {
@@ -98,11 +99,18 @@ export const getMeController = async (request, response) => {
 
 export const logOutController = async (request, response) => {
   try {
+    console.log(request.cookies.clearCookie);
     response.clearCookie('access_token', {
       httpOnly: true,
+      path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
+    });
+
+    return response.status(200).json({
+      success: 'true',
+      message: 'Logged out successfully.',
     });
   } catch (error) {
     console.log(error);
