@@ -16,6 +16,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { api } from "@/lib/axios";
 import { getInitials } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function NavUser({
   user,
@@ -31,9 +32,12 @@ export function NavUser({
   const handleLogOut = async () => {
     try {
       await api.post("/auth/logout");
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        toast.info("Сессия истекла.");
+      }
+    } finally {
       router.replace("/auth/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
     }
   };
 
@@ -77,16 +81,16 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/dashboard/settings/profile')}>
                 <CircleUser />
                 Профиль
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/dashboard/settings/account')}>
                 <Settings />
                 Настройки
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <MessageSquareDot />
+              <DropdownMenuItem onClick={() => router.push('/dashboard/settings/notifications')}>
+                <MessageSquareDot/>
                 Уведомление
               </DropdownMenuItem>
             </DropdownMenuGroup>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/axios";
 import { getInitials } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function AccountSwitcher({
   user,
@@ -31,9 +32,12 @@ export function AccountSwitcher({
   const handleLogOut = async () => {
     try {
       await api.post("/auth/logout");
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        toast.info("Сессия истекла.");
+      }
+    } finally {
       router.replace("/auth/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
     }
   };
 
@@ -48,52 +52,35 @@ export function AccountSwitcher({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="size-9 rounded-lg cursor-pointer">
-          <AvatarImage
-            src={user.avatar || "/avatars/arhamkhnz.png"}
-            alt={user.name}
-          />
-          <AvatarFallback className="rounded-lg">
-            {getInitials(user.name)}
-          </AvatarFallback>
+        <Avatar className="size-9 cursor-pointer rounded-lg">
+          <AvatarImage src={user.avatar || "/avatars/arhamkhnz.png"} alt={user.name} />
+          <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        className="min-w-56 space-y-1 rounded-lg"
-        side="bottom"
-        align="end"
-        sideOffset={4}
-      >
+      <DropdownMenuContent className="min-w-56 space-y-1 rounded-lg" side="bottom" align="end" sideOffset={4}>
         <div className="flex w-full items-center gap-2 px-2 py-1.5">
           <Avatar className="size-9 rounded-lg">
-            <AvatarImage
-              src={user.avatar || "/avatars/arhamkhnz.png"}
-              alt={user.name}
-            />
-            <AvatarFallback className="rounded-lg">
-              {getInitials(user.name)}
-            </AvatarFallback>
+            <AvatarImage src={user.avatar || "/avatars/arhamkhnz.png"} alt={user.name} />
+            <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">{user.name}</span>
-            <span className="truncate text-xs capitalize text-muted-foreground">
-              {user.role || "administrator"}
-            </span>
+            <span className="text-muted-foreground truncate text-xs capitalize">{user.role || "administrator"}</span>
           </div>
         </div>
 
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/settings/profile')}>
             <BadgeCheck />
             Профиль
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/settings/account')}>
             <Settings />
             Настройки
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/settings/notifications')}>
             <Bell />
             Уведомления
           </DropdownMenuItem>
