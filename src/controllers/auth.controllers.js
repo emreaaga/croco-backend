@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail, findUserById } from '../models/user.model.js';
 import { DrizzleQueryError } from 'drizzle-orm';
-import { httpUrl } from 'zod';
 
 export const registerController = async (request, response) => {
   try {
