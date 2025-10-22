@@ -31,7 +31,12 @@ export const findUserByEmail = async email => {
 
 export const findUserById = async user_id => {
   return await db
-    .select({ id: UserTable.id, name: UserTable.name, email: UserTable.email })
+    .select({
+      password: UserTable.password,
+      id: UserTable.id,
+      name: UserTable.name,
+      email: UserTable.email,
+    })
     .from(UserTable)
     .where(eq(UserTable.id, user_id));
 };
@@ -76,4 +81,12 @@ export const changeUserStatus = async (user_id, user_status) => {
     .set({ status: user_status, updatedAt: sql`NOW()` })
     .where(eq(UserTable.id, user_id))
     .returning({ id: UserTable.id, status: UserTable.status });
+};
+
+export const changeUserPassword = async (user_id, new_password) => {
+  return db
+    .update(UserTable)
+    .set({ password: new_password, updatedAt: sql`NOW()` })
+    .where(eq(UserTable.id, user_id))
+    .returning({ id: UserTable.id });
 };

@@ -1,6 +1,11 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { createUser, findUserByEmail, findUserById } from '../models/user.model.js';
+import {
+  createUser,
+  findUserByEmail,
+  findUserById,
+  changeUserPassword,
+} from '../models/user.model.js';
 import { DrizzleQueryError } from 'drizzle-orm';
 
 export const registerController = async (request, response) => {
@@ -89,6 +94,7 @@ export const getMeController = async (request, response) => {
     if (!user) {
       return response.status(404).json({ success: false, message: 'User not found' });
     }
+    delete user[0].password;
     return response.status(200).json({ success: true, user: user[0] });
   } catch (error) {
     console.log(error);
@@ -98,7 +104,6 @@ export const getMeController = async (request, response) => {
 
 export const logOutController = async (request, response) => {
   try {
-    console.log(request.cookies.clearCookie);
     response.clearCookie('access_token', {
       httpOnly: true,
       path: '/',
@@ -116,6 +121,49 @@ export const logOutController = async (request, response) => {
     return response.status(500).json({
       success: false,
       message: 'Server error',
+    });
+  }
+};
+
+export const changePasswordController = async (request, response) => {
+  try {
+    const { old_password, password } = request.validatedData;
+
+    if (old_password === password) {
+      return response
+        .status(400)
+        .json({ success: false, message: 'New password cannot be the same as current one.' });
+    }
+
+    const userId = request.userId;
+
+    const user = await findUserById(userId);
+
+    if (!user.length) {
+      return response.status(404).json({ success: false, message: 'User not found' });
+    }
+    const result = await bcrypt.compare(old_password, user[0].password);
+
+    if (!result) {
+      return response.status(400).json({ success: false, message: 'Invalid credentials.' });
+    }
+
+    const new_password = await bcrypt.hash(password, 10);
+
+    await changeUserPassword(userId, new_password);
+    response.clearCookie('access_token', {
+      httpOnly: true,
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+    return response.status(200).json({ success: true, message: 'Password changed!' });
+  } catch (error) {
+    console.log(error);
+    return response.status(500).json({
+      success: false,
+      message: 'Server error.',
     });
   }
 };

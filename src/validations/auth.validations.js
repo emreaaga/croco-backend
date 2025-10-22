@@ -14,3 +14,10 @@ export const LoginSchema = z
     password: z.string().min(6, 'Password must be at least 6 characters long'),
   })
   .strict();
+
+export const ChangePasswordSchema = z
+  .object({
+    old_password: z.string().min(6, 'Password must be at least 6 characters long'),
+    password: z.string().min(6, 'Password must be at least 6 characters long'),
+  })
+  .strict();
