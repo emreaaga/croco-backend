@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1760548626900,
-      "tag": "0000_tan_betty_ross",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1760555405316,
-      "tag": "0001_milky_darwin",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1760684661991,
-      "tag": "0002_powerful_ravenous",
+      "when": 1761204815740,
+      "tag": "0000_misty_micromacro",
       "breakpoints": true
     }
   ]
