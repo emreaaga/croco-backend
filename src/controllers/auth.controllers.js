@@ -5,8 +5,10 @@ import {
   findUserByEmail,
   findUserById,
   changeUserPassword,
+  changeUserEmailStatus,
 } from '../models/user.model.js';
 import { DrizzleQueryError } from 'drizzle-orm';
+import { transporter } from '../config/mailer.js';
 
 export const registerController = async (request, response) => {
   try {
@@ -170,6 +172,26 @@ export const changePasswordController = async (request, response) => {
 
 export const sendVerificationController = async (request, response) => {
   try {
+    const userId = request.userId;
+    const user = await findUserById(userId);
+    if (!user.length) {
+      return response.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Нужно еще добавить проверку, а вообще у пользователя подтверждена ли почта
+
+    const token = jwt.sign({ id: user[0].id, email: user[0].email }, process.env.EMAIL_SECRET, {
+      expiresIn: '5m',
+    });
+
+    await transporter.sendMail({
+      from: '"Crocodile Pay" <noreply@crocodile-pay.uz>',
+      to: user[0].email,
+      subject: 'Email verification link',
+      html: `<p>Click the link to verify your email:</p>
+       <a href="${process.env.VERIFICATION_LINK + token}">Verify Email</a>`,
+    });
+
     return response.status(200).json({ success: true, message: 'Link sent!' });
   } catch (error) {
     console.log(error);
@@ -179,8 +201,29 @@ export const sendVerificationController = async (request, response) => {
 
 export const verifyEmailController = async (request, response) => {
   try {
+    const token = request.query?.token;
+    const encoded = jwt.verify(token, process.env.EMAIL_SECRET);
+
+    const user = await findUserById(encoded.id);
+    if (!user.length) {
+      return response.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Нужно еще добавить проверку, а вообще у пользователя подтверждена ли почта
+
+    if (encoded.email !== user[0].email) {
+      return response.status(404).json({ success: false, message: 'Incorrect emails' });
+    }
+
+    await changeUserEmailStatus(encoded.id);
+
     return response.status(200).json({ success: true, message: 'Email verified!' });
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return response.status(400).json({ success: false, message: error.message });
+    } else if (error.name === 'JsonWebTokenError') {
+      return response.status(400).json({ success: false, message: 'Ivalid token' });
+    }
     console.log(error);
     return response.status(500).json({ success: false, message: 'Server error' });
   }
