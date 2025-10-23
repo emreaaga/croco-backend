@@ -7,6 +7,8 @@ import {
   changeUserPassword,
 } from '../models/user.model.js';
 import { DrizzleQueryError } from 'drizzle-orm';
+import { request, response } from 'express';
+import { success } from 'zod';
 
 export const registerController = async (request, response) => {
   try {
@@ -165,5 +167,14 @@ export const changePasswordController = async (request, response) => {
       success: false,
       message: 'Server error.',
     });
+  }
+};
+
+export const sendVerificationController = async (request, response) => {
+  try {
+    return response.status(200).json({ success: true, message: 'Link sent!' });
+  } catch (error) {
+    console.log(error);
+    return response.status(500).json({ success: false, message: 'Server error' });
   }
 };
