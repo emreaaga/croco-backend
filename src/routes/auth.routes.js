@@ -15,20 +15,28 @@ import {
   LoginSchema,
   ChangePasswordSchema,
 } from '../validations/auth.validations.js';
+import {
+  emailLimiter,
+  loginLimiter,
+  registerLimiter,
+  changePasswordLimiter,
+  verifyEmailLimiter,
+} from '../config/rateLimiter.js';
 
 const router = Router();
 
-router.post('/register', handleValidate(RegisterSchema), registerController);
-router.post('/login', handleValidate(LoginSchema), loginController);
+router.post('/register', registerLimiter, handleValidate(RegisterSchema), registerController);
+router.post('/login', loginLimiter, handleValidate(LoginSchema), loginController);
 router.get('/me', authMiddleware, getMeController);
 router.post('/logout', authMiddleware, logOutController);
 router.post(
   '/change-password',
+  changePasswordLimiter,
   authMiddleware,
   handleValidate(ChangePasswordSchema),
   changePasswordController
 );
-router.post('/send-verification', sendVerificationController);
-router.get('/verify-email', verifyEmailController);
+router.post('/send-verification', emailLimiter, authMiddleware, sendVerificationController);
+router.get('/verify-email', verifyEmailLimiter, verifyEmailController);
 
 export default router;
