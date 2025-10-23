@@ -6,6 +6,7 @@ import {
   logOutController,
   changePasswordController,
   sendVerificationController,
+  verifyEmailController,
 } from '../controllers/auth.controllers.js';
 import { handleValidate } from '../middlewares/handleValidate.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
@@ -28,5 +29,6 @@ router.post(
   changePasswordController
 );
 router.post('/send-verification', sendVerificationController);
+router.get('/verify-email', verifyEmailController);
 
 export default router;
