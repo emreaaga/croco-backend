@@ -93,3 +93,10 @@ export const changeUserPassword = async (user_id, new_password) => {
     .where(eq(UserTable.id, user_id))
     .returning({ id: UserTable.id });
 };
+
+export const changeUserEmailStatus = async userId => {
+  return db
+    .update(UserTable)
+    .set({ is_email_verifed: true, updatedAt: sql`NOW()` })
+    .where(eq(UserTable.id, userId));
+};
