@@ -1,30 +1,62 @@
-# 🐊 CrocodilePay — Full Stack Project
+# 🐊 CrocodilePay — Admin Dashboard
+
+> Internal admin panel for managing users, roles, and system settings.
+
+---
 
 ## 🧩 Overview
-CrocodilePay is a fintech platform designed to provide secure and scalable payment services.  
-The system consists of a **backend REST API** built with Express.js and a **frontend web application** powered by Next.js.
+
+CrocodilePay Admin is a secure web application that provides administrative tools for internal operations.  
+It includes authentication, role-based access control (RBAC), and API integration with the CrocodilePay backend.
+
+### 🖼 Preview
+
+| Login Page | Dashboard | User Management |
+|-------------|------------|-----------------|
+| ![Login](./screenshots/login.png) | ![Dashboard](./screenshots/dashboard.png) | ![Users](./screenshots/users.png) |
+
+> *(All screenshots are from the development build — light theme by default.)*
 
 
-## 🚀 Tech Stack
+---
+
+## ⚙️ Tech Stack
+
 ### Backend
-- **Framework:** Express.js (Node.js)
-- **Database:** PostgreSQL (via Drizzle ORM)
-- **Auth:** JWT + HTTP-only cookies
-- **Validation:** Zod
-- **Security:** Helmet, Rate Limit, Compression
+- **Node.js + Express.js**
+- **PostgreSQL** (via **Drizzle ORM**)
+- **JWT Auth** with HTTP-only cookies
+- **Zod** for validation
+- **Helmet**, **Rate Limit**, **Compression**
 
 ### Frontend
-- **Framework:** Next.js (App Router)
-- **UI:** TailwindCSS + shadcn/ui + Lucide Icons
-- **HTTP Client:** Axios
-- **Notifications:** Sonner
+- **Next.js (App Router)**
+- **TailwindCSS** + **shadcn/ui**
+- **Axios** for API requests
+- **Sonner** for notifications
 
+---
 
-Run Backend
+## 🚀 Setup
+
+```bash
+# Clone repository
+git clone https://github.com/emreaaga/croco-fullstack.git
+cd croco-fullstack
+
+Backend
 npm install
 npm run dev
 
-Run Frontend
-cd ./frontend
+Frontend
+cd frontend
 npm install
 npm run dev
+
+🧱 Features
+
+- **🔐 User authentication (login, register, logout)
+- **🧾 Role-based access control (admin / user)
+- **⚙️ Secure API endpoints
+- **🧠 Clean MVC structure
+- **🌐 REST communication between backend and frontend
