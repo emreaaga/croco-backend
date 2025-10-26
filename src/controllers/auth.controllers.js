@@ -22,7 +22,7 @@ export const registerController = async (request, response) => {
 
     return response.status(201).json({
       success: true,
-      message: 'User created successfuly.',
+      message: 'User created successfully.',
       data: result,
     });
   } catch (error) {
@@ -68,9 +68,13 @@ export const loginController = async (request, response) => {
       { id: user[0].id, email: user[0].email, role: user[0].roles },
       process.env.JWT_SECRET,
       {
-        expiresIn: '7d',
+        expiresIn: '1m',
       }
     );
+
+    const refresh_token = jwt.sign({ id: user[0].id }, process.env.REFRESH_SECRET, {
+      expiresIn: '3d',
+    });
 
     response.cookie('access_token', token, {
       httpOnly: true,
@@ -81,9 +85,18 @@ export const loginController = async (request, response) => {
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
+    response.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+
     return response.status(200).json({
       success: true,
-      message: 'User loged in successfuly.',
+      message: 'User loged in successfully.',
     });
   } catch (error) {
     console.log(error);
@@ -227,6 +240,44 @@ export const verifyEmailController = async (request, response) => {
       return response.status(400).json({ success: false, message: error.message });
     } else if (error.name === 'JsonWebTokenError') {
       return response.status(400).json({ success: false, message: 'Ivalid token' });
+    }
+    console.log(error);
+    return response.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const refreshTokenController = async (request, response) => {
+  try {
+    const refresh_token = request.cookies?.refresh_token;
+    if (!refresh_token) {
+      return response.status(400).json({ success: false, message: 'Not authenticated.' });
+    }
+    const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET);
+    const [user] = await findUserById(decoded.id);
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1m',
+      }
+    );
+
+    response.cookie('access_token', token, {
+      httpOnly: true,
+      maxAge: 10 * 60 * 1000,
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+
+    return response.status(200).json({ success: true, message: 'Token refreshed.' });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return response.status(400).json({ success: false, message: 'Invalid refresh token' });
+    } else if (error.name === 'TokenExpiredError') {
+      return response.status(401).json({ success: false, message: 'Refresh token expired' });
     }
     console.log(error);
     return response.status(500).json({ success: false, message: 'Server error' });

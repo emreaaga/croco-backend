@@ -39,6 +39,7 @@ export const findUserById = async user_id => {
       id: UserTable.id,
       name: UserTable.name,
       email: UserTable.email,
+      role: UserTable.roles,
     })
     .from(UserTable)
     .where(eq(UserTable.id, user_id));

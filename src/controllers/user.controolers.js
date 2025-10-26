@@ -12,10 +12,7 @@ export const getUsersController = async (request, response) => {
     });
   } catch (error) {
     console.log(error);
-    return response.status(500).json({
-      success: false,
-      message: 'Server error.',
-    });
+    return response.status(500).json({ success: false, message: 'Server error.' });
   }
 };
 

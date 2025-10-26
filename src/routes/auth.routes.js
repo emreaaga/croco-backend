@@ -7,6 +7,7 @@ import {
   changePasswordController,
   sendVerificationController,
   verifyEmailController,
+  refreshTokenController,
 } from '../controllers/auth.controllers.js';
 import { handleValidate } from '../middlewares/handleValidate.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
@@ -38,5 +39,6 @@ router.post(
 );
 router.post('/send-verification', emailLimiter, authMiddleware, sendVerificationController);
 router.get('/verify-email', verifyEmailLimiter, verifyEmailController);
+router.get('/refresh', refreshTokenController);
 
 export default router;
