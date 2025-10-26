@@ -10,6 +10,7 @@ export const authMiddleware = async (request, response, next) => {
       return response.status(401).json({ success: false, message: 'Invalid token payload' });
     }
     request.userId = encoded.id;
+    request.userRole = encoded.role;
     next();
   } catch (error) {
     console.error('JWT error', error.message);

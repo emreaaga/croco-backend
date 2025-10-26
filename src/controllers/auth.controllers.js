@@ -64,9 +64,13 @@ export const loginController = async (request, response) => {
       });
     }
 
-    const token = jwt.sign({ id: user[0].id, email: user[0].email }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    const token = jwt.sign(
+      { id: user[0].id, email: user[0].email, role: user[0].roles },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '7d',
+      }
+    );
 
     response.cookie('access_token', token, {
       httpOnly: true,
