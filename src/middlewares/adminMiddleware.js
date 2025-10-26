@@ -12,7 +12,6 @@ export const isAdminMiddleware = async (request, response, next) => {
       return response.status(403).json({ success: false, message: 'Access denied.' });
     }
 
-    console.log(userRole);
     next();
   } catch (error) {
     console.log(error);
