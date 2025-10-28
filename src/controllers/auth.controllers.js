@@ -1,15 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import {
-  createUser,
-  findUserByEmail,
-  findUserById,
-  changeUserPassword,
-  changeUserEmailStatus,
-} from '../repositories/user.repository.js';
 import { DrizzleQueryError } from 'drizzle-orm';
 import { transporter } from '../config/mailer.js';
-import { tokenRepository } from '../repositories/index.js';
+import { userRepository, tokenRepository } from '../repositories/index.js';
 
 export const registerController = async (request, response) => {
   try {
@@ -19,7 +12,7 @@ export const registerController = async (request, response) => {
       email: request.validatedData.email,
       password: hashedPassword,
     };
-    const result = await createUser(data);
+    const result = await userRepository.create(data);
 
     return response.status(201).json({
       success: true,
@@ -43,7 +36,7 @@ export const registerController = async (request, response) => {
 
 export const loginController = async (request, response) => {
   try {
-    const [user] = await findUserByEmail(request.validatedData.email);
+    const [user] = await userRepository.findByEmail(request.validatedData.email);
     if (!user) {
       return response.status(400).json({
         success: false,
@@ -113,7 +106,7 @@ export const loginController = async (request, response) => {
 
 export const getMeController = async (request, response) => {
   try {
-    const user = await findUserById(request.userId);
+    const user = await userRepository.findById(request.userId);
     if (!user) {
       return response.status(404).json({ success: false, message: 'User not found' });
     }
@@ -168,7 +161,7 @@ export const changePasswordController = async (request, response) => {
 
     const userId = request.userId;
 
-    const user = await findUserById(userId);
+    const user = await userRepository.findById(userId);
 
     if (!user.length) {
       return response.status(404).json({ success: false, message: 'User not found' });
@@ -181,7 +174,7 @@ export const changePasswordController = async (request, response) => {
 
     const new_password = await bcrypt.hash(password, 10);
 
-    await changeUserPassword(userId, new_password);
+    await userRepository.updatePassword(userId, new_password);
     response.clearCookie('access_token', {
       httpOnly: true,
       path: '/',
@@ -202,7 +195,7 @@ export const changePasswordController = async (request, response) => {
 export const sendVerificationController = async (request, response) => {
   try {
     const userId = request.userId;
-    const user = await findUserById(userId);
+    const user = await userRepository.findById(userId);
     if (!user.length) {
       return response.status(404).json({ success: false, message: 'User not found' });
     }
@@ -233,7 +226,7 @@ export const verifyEmailController = async (request, response) => {
     const token = request.query?.token;
     const encoded = jwt.verify(token, process.env.EMAIL_SECRET);
 
-    const user = await findUserById(encoded.id);
+    const user = await userRepository.findById(encoded.id);
     if (!user.length) {
       return response.status(404).json({ success: false, message: 'User not found.' });
     }
@@ -244,7 +237,7 @@ export const verifyEmailController = async (request, response) => {
       return response.status(404).json({ success: false, message: 'Incorrect emails' });
     }
 
-    await changeUserEmailStatus(encoded.id);
+    await userRepository.updateEmailStatus(encoded.id);
 
     return response.status(200).json({ success: true, message: 'Email verified!' });
   } catch (error) {
@@ -265,7 +258,7 @@ export const refreshTokenController = async (request, response) => {
       return response.status(400).json({ success: false, message: 'Not authenticated.' });
     }
     const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET);
-    const [user] = await findUserById(decoded.id);
+    const [user] = await userRepository.findById(decoded.id);
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },

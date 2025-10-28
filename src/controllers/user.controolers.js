@@ -1,9 +1,9 @@
-import { getUsers, changeUserStatus } from '../repositories/user.repository.js';
+import { userRepository } from '../repositories/index.js';
 
 export const getUsersController = async (request, response) => {
   try {
     const queryData = request.validatedData;
-    const users = await getUsers(queryData.page, queryData.page_size);
+    const users = await userRepository.findAll(queryData.page, queryData.page_size);
 
     return response.status(200).json({
       success: true,
@@ -29,7 +29,7 @@ export const changeUserStatusController = async (request, response) => {
       return response.status(400).json({ success: false, message: 'Invalid user status value.' });
     }
 
-    const [result] = await changeUserStatus(user_id, user_status);
+    const [result] = await userRepository.updateStatus(user_id, user_status);
     if (!result) {
       return response.status(404).json({ success: false, message: 'User not found.' });
     }

@@ -1,7 +1,7 @@
 import { db } from '../config/db.js';
 import { TokenTable } from '../models/token.model.js';
 
-export class TokenRepository {
+class TokenRepository {
   constructor(database) {
     this.db = database;
   }
