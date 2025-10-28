@@ -5,9 +5,7 @@ import compression from 'compression';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-import applicationRouter from './routes/application.routes.js';
-import authRouter from './routes/auth.routes.js';
-import userRouter from './routes/user.routes.js';
+import { applicationRouter, authRouter, userRouter } from './routes/index.js';
 import { globalLimiter } from './config/rateLimiter.js';
 
 const app = express();
