@@ -9,6 +9,7 @@ import {
 } from '../repositories/user.repository.js';
 import { DrizzleQueryError } from 'drizzle-orm';
 import { transporter } from '../config/mailer.js';
+import { tokenRepository } from '../repositories/index.js';
 
 export const registerController = async (request, response) => {
   try {
@@ -42,14 +43,14 @@ export const registerController = async (request, response) => {
 
 export const loginController = async (request, response) => {
   try {
-    const user = await findUserByEmail(request.validatedData.email);
-    if (!user.length) {
+    const [user] = await findUserByEmail(request.validatedData.email);
+    if (!user) {
       return response.status(400).json({
         success: false,
         message: 'Incorect email or password',
       });
     }
-    const result = await bcrypt.compare(request.validatedData.password, user[0].password);
+    const result = await bcrypt.compare(request.validatedData.password, user.password);
     if (!result) {
       return response.status(400).json({
         success: false,
@@ -57,7 +58,7 @@ export const loginController = async (request, response) => {
       });
     }
 
-    if (user[0].status === 'pending' || user[0].status === 'rejected') {
+    if (user.status === 'pending' || user.status === 'rejected') {
       return response.status(400).json({
         success: false,
         message: 'Wait until admin approve your account',
@@ -65,16 +66,19 @@ export const loginController = async (request, response) => {
     }
 
     const token = jwt.sign(
-      { id: user[0].id, email: user[0].email, role: user[0].roles },
+      { id: user.id, email: user.email, role: user.roles },
       process.env.JWT_SECRET,
       {
         expiresIn: '1m',
       }
     );
 
-    const refresh_token = jwt.sign({ id: user[0].id }, process.env.REFRESH_SECRET, {
-      expiresIn: '3d',
+    const refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
+      expiresIn: '7d',
     });
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await tokenRepository.saveRefreshToken(user.id, refresh_token, expiresAt);
 
     response.cookie('access_token', token, {
       httpOnly: true,
@@ -87,7 +91,7 @@ export const loginController = async (request, response) => {
 
     response.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      maxAge: 3 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
       domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
       secure: process.env.NODE_ENV === 'production',

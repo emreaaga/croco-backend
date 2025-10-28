@@ -1,5 +1,5 @@
 import { pgTable, text, integer, timestamp, boolean } from 'drizzle-orm/pg-core';
-import { UserTable } from './user.model';
+import { UserTable } from './user.model.js';
 
 export const TokenTable = pgTable('token', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
