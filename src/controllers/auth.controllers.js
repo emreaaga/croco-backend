@@ -131,6 +131,14 @@ export const logOutController = async (request, response) => {
       domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
     });
 
+    response.clearCookie('refresh_token', {
+      httpOnly: true,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
+    });
+
     return response.status(200).json({
       success: 'true',
       message: 'Logged out successfully.',
