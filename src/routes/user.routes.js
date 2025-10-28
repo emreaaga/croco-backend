@@ -1,10 +1,7 @@
 import { Router } from 'express';
 import { getUsersController, changeUserStatusController } from '../controllers/user.controolers.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
-import PaginateValidation from '../validations/query.validations.js';
-import UserPatchSchema from '../validations/user.validations.js';
-import { handleValidate } from '../middlewares/handleValidate.js';
-import { isAdminMiddleware } from '../middlewares/adminMiddleware.js';
+import { authMiddleware, handleValidate, isAdminMiddleware } from '../middlewares/index.js';
+import { PaginateValidation, UserPatchSchema } from '../validations/index.js';
 
 const router = Router();
 router.get(

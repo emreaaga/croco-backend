@@ -14,5 +14,3 @@ export const PaginateValidation = z
       .default('10'),
   })
   .strict();
-
-export default PaginateValidation;

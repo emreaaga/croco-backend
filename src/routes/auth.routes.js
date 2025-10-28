@@ -9,13 +9,8 @@ import {
   verifyEmailController,
   refreshTokenController,
 } from '../controllers/auth.controllers.js';
-import { handleValidate } from '../middlewares/handleValidate.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
-import {
-  RegisterSchema,
-  LoginSchema,
-  ChangePasswordSchema,
-} from '../validations/auth.validations.js';
+import { handleValidate, authMiddleware } from '../middlewares/index.js';
+import { RegisterSchema, LoginSchema, ChangePasswordSchema } from '../validations/index.js';
 import {
   emailLimiter,
   loginLimiter,

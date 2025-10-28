@@ -1,4 +1,4 @@
-import { createApplication, getApplications } from '../models/application.model.js';
+import { createApplication, getApplications } from '../repositories/application.repository.js';
 
 export const createApplicationController = async (request, response) => {
   try {

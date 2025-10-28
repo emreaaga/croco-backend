@@ -3,10 +3,8 @@ import {
   createApplicationController,
   getApplicationsController,
 } from '../controllers/application.controllers.js';
-import { ApplicationSchema } from '../validations/application.validations.js';
-import { handleValidate } from '../middlewares/handleValidate.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
-import PaginateValidation from '../validations/query.validations.js';
+import { handleValidate, authMiddleware } from '../middlewares/index.js';
+import { PaginateValidation, ApplicationSchema } from '../validations/index.js';
 import { createApplicatonLimiter } from '../config/rateLimiter.js';
 
 const router = Router();

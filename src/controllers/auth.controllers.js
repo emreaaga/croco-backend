@@ -6,7 +6,7 @@ import {
   findUserById,
   changeUserPassword,
   changeUserEmailStatus,
-} from '../models/user.model.js';
+} from '../repositories/user.repository.js';
 import { DrizzleQueryError } from 'drizzle-orm';
 import { transporter } from '../config/mailer.js';
 

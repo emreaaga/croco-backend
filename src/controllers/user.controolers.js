@@ -1,4 +1,4 @@
-import { getUsers, changeUserStatus } from '../models/user.model.js';
+import { getUsers, changeUserStatus } from '../repositories/user.repository.js';
 
 export const getUsersController = async (request, response) => {
   try {

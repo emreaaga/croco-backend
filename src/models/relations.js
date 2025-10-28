@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 
-import { UserTable } from './user.model';
-import { TokenTable } from './token.model';
+import { UserTable } from './user.model.js';
+import { TokenTable } from './token.model.js';
 
 export const UserRelations = relations(UserTable, ({ many }) => ({
   tokens: many(TokenTable),
