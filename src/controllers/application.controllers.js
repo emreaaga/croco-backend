@@ -1,8 +1,8 @@
-import { applicationRepository } from '../repositories/index.js';
+import { applicationService } from '../services/index.js';
 
 export const createApplicationController = async (request, response) => {
   try {
-    const result = await applicationRepository.create(request.validatedData);
+    const result = await applicationService.create(request.validatedData);
     return response.status(201).json({
       success: true,
       message: 'Application created successfully.',
@@ -19,12 +19,7 @@ export const createApplicationController = async (request, response) => {
 
 export const getApplicationsController = async (request, response) => {
   try {
-    const queryData = request.validatedData;
-    const { data, pagination } = await applicationRepository.findAll(
-      queryData.page,
-      queryData.page_size
-    );
-
+    const { data, pagination } = await applicationService.getAll(request.validatedData);
     return response.status(200).json({
       success: true,
       data,
