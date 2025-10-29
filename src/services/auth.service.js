@@ -1,10 +1,14 @@
-import { userRepository, tokenRepository } from '../repositories/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+import { userRepository, tokenRepository } from '../repositories/index.js';
+import { transporter } from '../config/mailer.js';
+
 class AuthService {
-  constructor({ jwtSecret, refreshSecret }) {
-    ((this.jwtSecret = jwtSecret), (this.refreshSecret = refreshSecret));
+  constructor({ jwtSecret, refreshSecret, emailSecret }) {
+    ((this.jwtSecret = jwtSecret),
+      (this.refreshSecret = refreshSecret),
+      (this.emailSecret = emailSecret));
   }
   async register(validatedData) {
     if (!validatedData) {
@@ -44,6 +48,7 @@ class AuthService {
       throw new Error('User not found');
     }
     delete user.password;
+    delete user.is_email_verifed;
     return user;
   }
   async logOut(userId) {
@@ -60,6 +65,22 @@ class AuthService {
     if (!match) throw new Error('Incorect current password');
     const hashedPassword = await this.hashPassword(password);
     await userRepository.updatePassword(user.id, hashedPassword);
+  }
+  async sendVerification(userId) {
+    const [user] = await userRepository.findById(userId);
+    if (!user) throw new Error('User not found');
+    if (user.is_email_verifed) throw new Error('User email already verified.');
+
+    const token = await this.createVerifyToken(user.id, user.email);
+    const verifyUrl = `${process.env.API_BASE_URL}/auth/verify-email?token=${token}`;
+
+    await transporter.sendMail({
+      from: '"Crocodile Pay" <noreply@crocodile-pay.uz>',
+      to: user.email,
+      subject: 'Email verification link',
+      html: `<p>Click the link to verify your email:</p>
+       <a href="${verifyUrl}">Verify Email</a>`,
+    });
   }
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
@@ -79,9 +100,15 @@ class AuthService {
 
     return refresh_token;
   }
+  async createVerifyToken(id, email) {
+    return jwt.sign({ id, email }, this.emailSecret, {
+      expiresIn: '5m',
+    });
+  }
 }
 
 export const authService = new AuthService({
   jwtSecret: process.env.JWT_SECRET,
   refreshSecret: process.env.REFRESH_SECRET,
+  emailSecret: process.env.EMAIL_SECRET,
 });

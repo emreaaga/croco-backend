@@ -31,6 +31,7 @@ class UserRepository {
         name: UserTable.name,
         email: UserTable.email,
         role: UserTable.roles,
+        is_email_verifed: UserTable.is_email_verifed,
       })
       .from(UserTable)
       .where(eq(UserTable.id, user_id));

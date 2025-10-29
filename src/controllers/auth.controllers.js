@@ -83,6 +83,7 @@ export const changePasswordController = async (request, response) => {
   try {
     await authService.changePassword(request.validatedData, request.userId);
     clearAuthCookies(response);
+
     return response.status(200).json({ success: true, message: 'Password changed!' });
   } catch (error) {
     if (error.message === 'New password cannot be the same as current one.') {
@@ -101,28 +102,15 @@ export const changePasswordController = async (request, response) => {
 
 export const sendVerificationController = async (request, response) => {
   try {
-    const userId = request.userId;
-    const user = await userRepository.findById(userId);
-    if (!user.length) {
-      return response.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    // Нужно еще добавить проверку, а вообще у пользователя подтверждена ли почта
-
-    const token = jwt.sign({ id: user[0].id, email: user[0].email }, process.env.EMAIL_SECRET, {
-      expiresIn: '5m',
-    });
-
-    await transporter.sendMail({
-      from: '"Crocodile Pay" <noreply@crocodile-pay.uz>',
-      to: user[0].email,
-      subject: 'Email verification link',
-      html: `<p>Click the link to verify your email:</p>
-       <a href="${process.env.VERIFICATION_LINK + token}">Verify Email</a>`,
-    });
+    await authService.sendVerification(request.userId);
 
     return response.status(200).json({ success: true, message: 'Link sent!' });
   } catch (error) {
+    if (error.message === 'User not found') {
+      return response.status(404).json({ success: false, message: error.message });
+    } else if (error.message === 'User email already verified.') {
+      return response.status(400).json({ success: false, message: error.message });
+    }
     console.log(error);
     return response.status(500).json({ success: false, message: 'Server error' });
   }
