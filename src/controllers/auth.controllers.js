@@ -57,6 +57,9 @@ export const loginController = async (request, response) => {
         message: 'Wait until admin approve your account',
       });
     }
+    const refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
+      expiresIn: '7d',
+    });
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.roles },
@@ -65,10 +68,6 @@ export const loginController = async (request, response) => {
         expiresIn: '1m',
       }
     );
-
-    const refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
-      expiresIn: '7d',
-    });
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await tokenRepository.saveRefreshToken(user.id, refresh_token, expiresAt);
@@ -120,6 +119,8 @@ export const getMeController = async (request, response) => {
 
 export const logOutController = async (request, response) => {
   try {
+    const userId = request.userId;
+    await tokenRepository.deleteByUserId(userId);
     response.clearCookie('access_token', {
       httpOnly: true,
       path: '/',
@@ -257,20 +258,43 @@ export const refreshTokenController = async (request, response) => {
     if (!refresh_token) {
       return response.status(400).json({ success: false, message: 'Not authenticated.' });
     }
-    const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET);
-    const [user] = await userRepository.findById(decoded.id);
 
-    const token = jwt.sign(
+    const [validToken] = await tokenRepository.findByToken(refresh_token);
+    if (!validToken) {
+      return response.status(400).json({ success: false, message: 'Invalid refresh token.' });
+    }
+
+    const decoded = jwt.verify(refresh_token, process.env.REFRESH_SECRET);
+
+    const [user] = await userRepository.findById(decoded.id);
+    if (!user) {
+      return response.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const access_token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      {
-        expiresIn: '1m',
-      }
+      { expiresIn: '1m' }
     );
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const new_refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
+      expiresIn: '7d',
+    });
 
-    response.cookie('access_token', token, {
+    tokenRepository.saveRefreshToken(user.id, new_refresh_token, expiresAt);
+
+    response.cookie('access_token', access_token, {
       httpOnly: true,
       maxAge: 10 * 60 * 1000,
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+
+    response.cookie('refresh_token', new_refresh_token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
       domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
       secure: process.env.NODE_ENV === 'production',
