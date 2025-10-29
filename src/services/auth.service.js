@@ -37,6 +37,14 @@ class AuthService {
 
     return { refresh_token, access_token };
   }
+  async getMe(userId) {
+    const [user] = await userRepository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    delete user.password;
+    return user;
+  }
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
   }

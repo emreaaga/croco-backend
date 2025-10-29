@@ -52,14 +52,12 @@ export const loginController = async (request, response) => {
 
 export const getMeController = async (request, response) => {
   try {
-    const user = await userRepository.findById(request.userId);
-    if (!user) {
-      return response.status(404).json({ success: false, message: 'User not found' });
-    }
-    delete user[0].password;
-    return response.status(200).json({ success: true, user: user[0] });
+    const user = await authService.getMe(request.userId);
+    return response.status(200).json({ success: true, user: user });
   } catch (error) {
-    console.log(error);
+    if (error.message === 'User not found') {
+      return response.status(404).json({ success: false, message: error.message });
+    }
     return response.status(500).json({ success: false, message: 'Server error.' });
   }
 };
