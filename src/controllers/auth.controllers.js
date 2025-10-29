@@ -4,6 +4,7 @@ import { DrizzleQueryError } from 'drizzle-orm';
 import { transporter } from '../config/mailer.js';
 import { userRepository, tokenRepository } from '../repositories/index.js';
 import { authService } from '../services/index.js';
+import { setAuthCookies } from '../utils/cookie.js';
 
 export const registerController = async (request, response) => {
   try {
@@ -33,70 +34,19 @@ export const registerController = async (request, response) => {
 
 export const loginController = async (request, response) => {
   try {
-    const [user] = await userRepository.findByEmail(request.validatedData.email);
-    if (!user) {
-      return response.status(400).json({
-        success: false,
-        message: 'Incorect email or password',
-      });
-    }
-    const result = await bcrypt.compare(request.validatedData.password, user.password);
-    if (!result) {
-      return response.status(400).json({
-        success: false,
-        message: 'Incorect email or password',
-      });
-    }
+    const { access_token, refresh_token } = await authService.login(request.validatedData);
+    setAuthCookies(response, access_token, refresh_token);
 
-    if (user.status === 'pending' || user.status === 'rejected') {
-      return response.status(400).json({
-        success: false,
-        message: 'Wait until admin approve your account',
-      });
-    }
-    const refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
-      expiresIn: '7d',
-    });
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.roles },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: '1m',
-      }
-    );
-
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await tokenRepository.saveRefreshToken(user.id, refresh_token, expiresAt);
-
-    response.cookie('access_token', token, {
-      httpOnly: true,
-      maxAge: 10 * 60 * 1000,
-      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    });
-
-    response.cookie('refresh_token', refresh_token, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    });
-
-    return response.status(200).json({
-      success: true,
-      message: 'User loged in successfully.',
-    });
+    return response.status(200).json({ success: true, message: 'User logged in successfully.' });
   } catch (error) {
-    console.log(error);
-    return response.status(500).json({
-      success: false,
-      message: 'Server error',
-    });
+    if (error.message === 'Invalid email or password format') {
+      return response.status(400).json({ success: false, message: error.message });
+    } else if (error.message === 'Wait until admin approve your account') {
+      return response.status(400).json({ success: false, message: error.message });
+    } else if (error.message === 'Incorect email or password') {
+      return response.status(400).json({ success: false, message: error.message });
+    }
+    return response.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
