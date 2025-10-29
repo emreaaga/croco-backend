@@ -1,1 +1,2 @@
 export { applicationService } from './application.service.js';
+export { userService } from './user.service.js';

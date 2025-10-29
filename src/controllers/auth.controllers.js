@@ -274,7 +274,7 @@ export const refreshTokenController = async (request, response) => {
     const access_token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1m' }
+      { expiresIn: '15m' }
     );
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const new_refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
