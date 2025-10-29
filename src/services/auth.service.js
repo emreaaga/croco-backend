@@ -82,6 +82,15 @@ class AuthService {
        <a href="${verifyUrl}">Verify Email</a>`,
     });
   }
+  async verifyEmail(token) {
+    const encoded = jwt.verify(token, this.emailSecret);
+    const [user] = await userRepository.findById(encoded.id);
+    if (!user) throw new Error('User not found.');
+    if (user.is_email_verifed) throw new Error('User email already verified.');
+    if (encoded.email !== user.email) throw new Error('Incorrect emails');
+
+    await userRepository.updateEmailStatus(user.id);
+  }
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
   }

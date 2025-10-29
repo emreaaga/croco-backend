@@ -1,7 +1,5 @@
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { DrizzleQueryError } from 'drizzle-orm';
-import { transporter } from '../config/mailer.js';
 import { userRepository, tokenRepository } from '../repositories/index.js';
 import { authService, userService } from '../services/index.js';
 import { setAuthCookies, clearAuthCookies } from '../utils/cookie.js';
@@ -118,21 +116,7 @@ export const sendVerificationController = async (request, response) => {
 
 export const verifyEmailController = async (request, response) => {
   try {
-    const token = request.query?.token;
-    const encoded = jwt.verify(token, process.env.EMAIL_SECRET);
-
-    const user = await userRepository.findById(encoded.id);
-    if (!user.length) {
-      return response.status(404).json({ success: false, message: 'User not found.' });
-    }
-
-    // Нужно еще добавить проверку, а вообще у пользователя подтверждена ли почта
-
-    if (encoded.email !== user[0].email) {
-      return response.status(404).json({ success: false, message: 'Incorrect emails' });
-    }
-
-    await userRepository.updateEmailStatus(encoded.id);
+    await authService.verifyEmail(request.query?.token);
 
     return response.status(200).json({ success: true, message: 'Email verified!' });
   } catch (error) {
@@ -140,6 +124,12 @@ export const verifyEmailController = async (request, response) => {
       return response.status(400).json({ success: false, message: error.message });
     } else if (error.name === 'JsonWebTokenError') {
       return response.status(400).json({ success: false, message: 'Ivalid token' });
+    } else if (error.message === 'User not found.') {
+      return response.status(404).json({ success: false, message: error.message });
+    } else if (error.message === 'User email already verified.') {
+      return response.status(400).json({ success: false, message: error.message });
+    } else if (error.message === 'Incorrect emails') {
+      return response.status(400).json({ success: false, message: error.message });
     }
     console.log(error);
     return response.status(500).json({ success: false, message: 'Server error' });
