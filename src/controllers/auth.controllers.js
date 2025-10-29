@@ -3,16 +3,11 @@ import jwt from 'jsonwebtoken';
 import { DrizzleQueryError } from 'drizzle-orm';
 import { transporter } from '../config/mailer.js';
 import { userRepository, tokenRepository } from '../repositories/index.js';
+import { authService } from '../services/index.js';
 
 export const registerController = async (request, response) => {
   try {
-    const hashedPassword = await bcrypt.hash(request.validatedData.password, 10);
-    const data = {
-      name: request.validatedData.name,
-      email: request.validatedData.email,
-      password: hashedPassword,
-    };
-    const result = await userRepository.create(data);
+    const result = await authService.register(request?.validatedData);
 
     return response.status(201).json({
       success: true,
@@ -26,6 +21,8 @@ export const registerController = async (request, response) => {
         message: 'This email is already registered. Please sign in.',
         code: 'EMAIL_EXISTS',
       });
+    } else if (error.message === 'No provided data.') {
+      return response.status(400).json({ success: false, message: error.message });
     }
     return response.status(500).json({
       success: false,
@@ -274,7 +271,7 @@ export const refreshTokenController = async (request, response) => {
     const access_token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '50m' }
     );
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const new_refresh_token = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
