@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 import { DrizzleQueryError } from 'drizzle-orm';
 import { transporter } from '../config/mailer.js';
 import { userRepository, tokenRepository } from '../repositories/index.js';
-import { authService } from '../services/index.js';
-import { setAuthCookies } from '../utils/cookie.js';
+import { authService, userService } from '../services/index.js';
+import { setAuthCookies, clearAuthCookies } from '../utils/cookie.js';
 
 export const registerController = async (request, response) => {
   try {
@@ -64,24 +64,8 @@ export const getMeController = async (request, response) => {
 
 export const logOutController = async (request, response) => {
   try {
-    const userId = request.userId;
-    await tokenRepository.deleteByUserId(userId);
-    response.clearCookie('access_token', {
-      httpOnly: true,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
-    });
-
-    response.clearCookie('refresh_token', {
-      httpOnly: true,
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
-    });
-
+    await authService.logOut(request.userId);
+    clearAuthCookies(response);
     return response.status(200).json({
       success: 'true',
       message: 'Logged out successfully.',

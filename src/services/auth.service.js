@@ -45,6 +45,9 @@ class AuthService {
     delete user.password;
     return user;
   }
+  async logOut(userId) {
+    await tokenRepository.deleteByUserId(userId);
+  }
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
   }

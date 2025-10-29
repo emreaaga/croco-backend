@@ -23,4 +23,7 @@ export const setAuthCookies = (response, accessToken, refreshToken) => {
   response.cookie('access_token', accessToken, cookieOptions.access);
   response.cookie('refresh_token', refreshToken, cookieOptions.refresh);
 };
-export const clearAuthCookies = response => {};
+export const clearAuthCookies = response => {
+  response.clearCookie('access_token', cookieOptions.access);
+  response.clearCookie('refresh_token', cookieOptions.refresh);
+};
