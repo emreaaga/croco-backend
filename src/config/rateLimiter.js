@@ -29,7 +29,7 @@ export const registerLimiter = rateLimit({
 
 export const changePasswordLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 1,
+  max: 10,
   message: { success: false, message: 'Too many change password attempts, try later' },
 });
 

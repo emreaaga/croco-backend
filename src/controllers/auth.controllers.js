@@ -81,40 +81,17 @@ export const logOutController = async (request, response) => {
 
 export const changePasswordController = async (request, response) => {
   try {
-    const { old_password, password } = request.validatedData;
-
-    if (old_password === password) {
-      return response
-        .status(400)
-        .json({ success: false, message: 'New password cannot be the same as current one.' });
-    }
-
-    const userId = request.userId;
-
-    const user = await userRepository.findById(userId);
-
-    if (!user.length) {
-      return response.status(404).json({ success: false, message: 'User not found' });
-    }
-    const result = await bcrypt.compare(old_password, user[0].password);
-
-    if (!result) {
-      return response.status(400).json({ success: false, message: 'Invalid credentials.' });
-    }
-
-    const new_password = await bcrypt.hash(password, 10);
-
-    await userRepository.updatePassword(userId, new_password);
-    response.clearCookie('access_token', {
-      httpOnly: true,
-      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.crocodile-pay.uz' : undefined,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    });
+    await authService.changePassword(request.validatedData, request.userId);
+    clearAuthCookies(response);
     return response.status(200).json({ success: true, message: 'Password changed!' });
   } catch (error) {
-    console.log(error);
+    if (error.message === 'New password cannot be the same as current one.') {
+      return response.status(400).json({ success: false, message: error.message });
+    } else if (error.message === '') {
+      return response.status(404).json({ success: false, message: error.message });
+    } else if (error.message === 'Incorect current password') {
+      return response.status(400).json({ success: false, message: error.message });
+    }
     return response.status(500).json({
       success: false,
       message: 'Server error.',
