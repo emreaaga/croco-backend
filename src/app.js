@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 
 import { applicationRouter, authRouter, userRouter } from './routes/index.js';
 import { globalLimiter } from './config/rateLimiter.js';
+import { globalErrorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 app.use(morgan('dev'));
@@ -26,5 +27,8 @@ app.use(globalLimiter);
 app.use('/api/applications', applicationRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
+
+// Error handler
+app.use(globalErrorHandler);
 
 export default app;

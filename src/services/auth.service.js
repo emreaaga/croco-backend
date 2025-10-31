@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import { userRepository, tokenRepository } from '../repositories/index.js';
 import { transporter } from '../config/mailer.js';
+import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/index.js';
 
 class AuthService {
   constructor({ jwtSecret, refreshSecret, emailSecret }) {
@@ -11,31 +12,29 @@ class AuthService {
       (this.emailSecret = emailSecret));
   }
   async register(validatedData) {
-    if (!validatedData) {
-      throw new Error('No provided data.');
-    }
+    if (!validatedData) throw new BadRequestError('No provided data.');
 
     const hashedPassword = await this.hashPassword(validatedData.password);
     validatedData.password = hashedPassword;
     const result = await userRepository.create(validatedData);
+
     return result;
   }
   async login(validatedData) {
     if (!validatedData.email || !validatedData.password || validatedData.password.length < 6) {
-      throw new Error('Invalid email or password format');
+      throw new BadRequestError('Invalid email or password format');
     }
     const { email, password } = validatedData;
 
     const [user] = await userRepository.findByEmail(email);
 
-    if (!user) {
-      throw new Error('Incorect email or password');
-    } else if (user.status !== 'approved') {
-      throw new Error('Wait until admin approve your account');
+    if (!user) throw new BadRequestError('Incorect email or password');
+    else if (user.status !== 'approved') {
+      throw new BadRequestError('Wait until admin approve your account');
     }
 
     const match = await this.comparePasswords(password, user.password);
-    if (!match) throw new Error('Incorect email or password');
+    if (!match) throw new BadRequestError('Incorect email or password');
 
     const refresh_token = await this.createRefreshToken(user.id);
     const access_token = await this.createAccessToken(user.id, user.email, user.roles);
@@ -44,9 +43,7 @@ class AuthService {
   }
   async getMe(userId) {
     const [user] = await userRepository.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    if (!user) throw new NotFoundError('User not found');
     delete user.password;
     delete user.is_email_verifed;
     return user;
@@ -57,19 +54,19 @@ class AuthService {
   async changePassword(validatedData, userId) {
     const { old_password, password } = validatedData;
     if (old_password === password) {
-      throw new Error('New password cannot be the same as current one.');
+      throw new BadRequestError('New password cannot be the same as current one.');
     }
     const [user] = await userRepository.findById(userId);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new NotFoundError('User not found');
     const match = await this.comparePasswords(old_password, user.password);
-    if (!match) throw new Error('Incorect current password');
+    if (!match) throw new BadRequestError('Incorect current password');
     const hashedPassword = await this.hashPassword(password);
     await userRepository.updatePassword(user.id, hashedPassword);
   }
   async sendVerification(userId) {
     const [user] = await userRepository.findById(userId);
-    if (!user) throw new Error('User not found');
-    if (user.is_email_verifed) throw new Error('User email already verified.');
+    if (!user) throw new NotFoundError('User not found');
+    if (user.is_email_verifed) throw new BadRequestError('User email already verified.');
 
     const token = await this.createVerifyToken(user.id, user.email);
     const verifyUrl = `${process.env.API_BASE_URL}/auth/verify-email?token=${token}`;
@@ -85,17 +82,47 @@ class AuthService {
   async verifyEmail(token) {
     const encoded = jwt.verify(token, this.emailSecret);
     const [user] = await userRepository.findById(encoded.id);
-    if (!user) throw new Error('User not found.');
-    if (user.is_email_verifed) throw new Error('User email already verified.');
-    if (encoded.email !== user.email) throw new Error('Incorrect emails');
+    if (!user) throw new NotFoundError('User not found.');
+    if (user.is_email_verifed) throw new BadRequestError('User email already verified.');
+    if (encoded.email !== user.email) throw new BadRequestError('Incorrect emails');
 
     await userRepository.updateEmailStatus(user.id);
+  }
+  async refreshToken(refresh_token) {
+    if (!refresh_token) throw new UnauthorizedError('Not authenticated.');
+
+    const payloud = await this.verifyRefresh(refresh_token);
+    const data = await tokenRepository.findByToken(refresh_token);
+
+    if (!data) throw new NotFoundError('User not found');
+    if (data.user_id !== payloud.id) throw new UnauthorizedError('Invalid refresh token owner.');
+
+    if (data.revoked === true) throw new BadRequestError('User doesnt have permission.');
+
+    const access_token = await this.createAccessToken(
+      data.user.id,
+      data.user.email,
+      data.user.roles
+    );
+
+    return access_token;
   }
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
   }
   async comparePasswords(password, hashedPassword) {
     return await bcrypt.compare(password, hashedPassword);
+  }
+  async verifyRefresh(refreshToken) {
+    try {
+      const encoded = jwt.verify(refreshToken, this.refreshSecret);
+      return encoded;
+    } catch (err) {
+      if (err.name === 'JsonWebTokenError') throw new BadRequestError('Invalid refresh token.');
+      else if (err.name === 'TokenExpiredError') throw new UnauthorizedError('Not authenticated.');
+      else if (err.name === 'NotBeforeError')
+        throw new BadRequestError('Session expired or invalid');
+    }
   }
   async createAccessToken(id, email, role) {
     return jwt.sign({ id, email, role }, this.jwtSecret, {

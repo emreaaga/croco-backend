@@ -18,7 +18,7 @@ class TokenRepository {
   }
 
   async findAll(userId) {
-    return this.db.select().from(TokenTable).where(eq(TokenTable.user_id, userId));
+    return await this.db.select().from(TokenTable).where(eq(TokenTable.user_id, userId));
   }
 
   async deleteByUserId(userId) {
@@ -26,7 +26,18 @@ class TokenRepository {
   }
 
   async findByToken(token) {
-    return this.db.select().from(TokenTable).where(eq(TokenTable.token, token));
+    return await this.db.query.TokenTable.findFirst({
+      where: (t, { eq }) => eq(t.token, token),
+      with: {
+        user: {
+          columns: {
+            id: true,
+            email: true,
+            roles: true,
+          },
+        },
+      },
+    });
   }
 }
 
