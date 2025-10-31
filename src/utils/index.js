@@ -8,3 +8,4 @@ export {
   ForbiddenError,
 } from './AppError.js';
 export { jwtService } from './jwt.service.js';
+export { hashService } from './hash.service.js';

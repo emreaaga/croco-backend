@@ -1,15 +1,18 @@
-import bcrypt from 'bcrypt';
-
 import { userRepository, tokenRepository } from '../repositories/index.js';
 import { transporter } from '../config/mailer.js';
-import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/index.js';
-import { jwtService } from '../utils/index.js';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+  jwtService,
+  hashService,
+} from '../utils/index.js';
 
 class AuthService {
   async register(validatedData) {
     if (!validatedData) throw new BadRequestError('No provided data.');
 
-    const hashedPassword = await this.hashPassword(validatedData.password);
+    const hashedPassword = await hashService.hashPassword(validatedData.password);
     validatedData.password = hashedPassword;
     const result = await userRepository.create(validatedData);
 
@@ -28,7 +31,7 @@ class AuthService {
       throw new BadRequestError('Wait until admin approve your account');
     }
 
-    const match = await this.comparePasswords(password, user.password);
+    const match = await hashService.comparePasswords(password, user.password);
     if (!match) throw new BadRequestError('Incorect email or password');
 
     const refresh_token = jwtService.createRefreshToken(user.id);
@@ -56,9 +59,9 @@ class AuthService {
     }
     const [user] = await userRepository.findById(userId);
     if (!user) throw new NotFoundError('User not found');
-    const match = await this.comparePasswords(old_password, user.password);
+    const match = await hashService.comparePasswords(old_password, user.password);
     if (!match) throw new BadRequestError('Incorect current password');
-    const hashedPassword = await this.hashPassword(password);
+    const hashedPassword = await hashService.hashPassword(password);
     await userRepository.updatePassword(user.id, hashedPassword);
   }
   async sendVerification(userId) {
@@ -103,12 +106,6 @@ class AuthService {
     );
 
     return access_token;
-  }
-  async hashPassword(password) {
-    return await bcrypt.hash(password, 10);
-  }
-  async comparePasswords(password, hashedPassword) {
-    return await bcrypt.compare(password, hashedPassword);
   }
 }
 
