@@ -1,19 +1,25 @@
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from '../utils/index.js';
 
 export const authMiddleware = async (request, response, next) => {
   const token = request.cookies?.access_token;
-  if (!token) return response.status(401).json({ message: 'Not authenticated.' });
+  if (!token) throw new UnauthorizedError('Not authenticated.');
 
   try {
     const encoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!encoded?.id) {
-      return response.status(401).json({ success: false, message: 'Invalid token payload' });
+      throw new UnauthorizedError('Invalid token payload.');
     }
     request.userId = encoded.id;
     request.userRole = encoded.role;
     next();
-  } catch (error) {
-    console.error('JWT error', error.message);
-    return response.status(401).json({ message: 'Session expired or invalid' });
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw new UnauthorizedError('Access token expired.');
+    }
+    if (err.name === 'JsonWebTokenError') {
+      throw new UnauthorizedError('Invalid token.');
+    }
+    throw new UnauthorizedError('Session expired or invalid.');
   }
 };
