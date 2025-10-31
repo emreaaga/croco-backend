@@ -33,8 +33,6 @@ class AuthService {
 
     const refresh_token = jwtService.createRefreshToken(user.id);
     const access_token = jwtService.createAccessToken(user.id, user.email, user.roles);
-    console.log(refresh_token);
-    console.log(access_token);
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await tokenRepository.saveRefreshToken(user.id, refresh_token, expiresAt);
