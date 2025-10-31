@@ -7,3 +7,4 @@ export {
   NotFoundError,
   ForbiddenError,
 } from './AppError.js';
+export { jwtService } from './jwt.service.js';

@@ -1,16 +1,11 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 
 import { userRepository, tokenRepository } from '../repositories/index.js';
 import { transporter } from '../config/mailer.js';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/index.js';
+import { jwtService } from '../utils/index.js';
 
 class AuthService {
-  constructor({ jwtSecret, refreshSecret, emailSecret }) {
-    ((this.jwtSecret = jwtSecret),
-      (this.refreshSecret = refreshSecret),
-      (this.emailSecret = emailSecret));
-  }
   async register(validatedData) {
     if (!validatedData) throw new BadRequestError('No provided data.');
 
@@ -36,8 +31,13 @@ class AuthService {
     const match = await this.comparePasswords(password, user.password);
     if (!match) throw new BadRequestError('Incorect email or password');
 
-    const refresh_token = await this.createRefreshToken(user.id);
-    const access_token = await this.createAccessToken(user.id, user.email, user.roles);
+    const refresh_token = jwtService.createRefreshToken(user.id);
+    const access_token = jwtService.createAccessToken(user.id, user.email, user.roles);
+    console.log(refresh_token);
+    console.log(access_token);
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await tokenRepository.saveRefreshToken(user.id, refresh_token, expiresAt);
 
     return { refresh_token, access_token };
   }
@@ -68,7 +68,7 @@ class AuthService {
     if (!user) throw new NotFoundError('User not found');
     if (user.is_email_verifed) throw new BadRequestError('User email already verified.');
 
-    const token = await this.createVerifyToken(user.id, user.email);
+    const token = jwtService.createEmailToken(user.id, user.email);
     const verifyUrl = `${process.env.API_BASE_URL}/auth/verify-email?token=${token}`;
 
     await transporter.sendMail({
@@ -80,7 +80,7 @@ class AuthService {
     });
   }
   async verifyEmail(token) {
-    const encoded = jwt.verify(token, this.emailSecret);
+    const encoded = jwtService.verifyEmail(token);
     const [user] = await userRepository.findById(encoded.id);
     if (!user) throw new NotFoundError('User not found.');
     if (user.is_email_verifed) throw new BadRequestError('User email already verified.');
@@ -90,8 +90,7 @@ class AuthService {
   }
   async refreshToken(refresh_token) {
     if (!refresh_token) throw new UnauthorizedError('Not authenticated.');
-
-    const payloud = await this.verifyRefresh(refresh_token);
+    const payloud = jwtService.verifyRefresh(refresh_token);
     const data = await tokenRepository.findByToken(refresh_token);
 
     if (!data) throw new NotFoundError('User not found');
@@ -99,7 +98,7 @@ class AuthService {
 
     if (data.revoked === true) throw new BadRequestError('User doesnt have permission.');
 
-    const access_token = await this.createAccessToken(
+    const access_token = jwtService.createAccessToken(
       data.user.id,
       data.user.email,
       data.user.roles
@@ -113,38 +112,6 @@ class AuthService {
   async comparePasswords(password, hashedPassword) {
     return await bcrypt.compare(password, hashedPassword);
   }
-  async verifyRefresh(refreshToken) {
-    try {
-      const encoded = jwt.verify(refreshToken, this.refreshSecret);
-      return encoded;
-    } catch (err) {
-      if (err.name === 'JsonWebTokenError') throw new BadRequestError('Invalid refresh token.');
-      else if (err.name === 'TokenExpiredError') throw new UnauthorizedError('Not authenticated.');
-      else if (err.name === 'NotBeforeError')
-        throw new BadRequestError('Session expired or invalid');
-    }
-  }
-  async createAccessToken(id, email, role) {
-    return jwt.sign({ id, email, role }, this.jwtSecret, {
-      expiresIn: '30m',
-    });
-  }
-  async createRefreshToken(id) {
-    const refresh_token = jwt.sign({ id }, this.refreshSecret, { expiresIn: '7d' });
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await tokenRepository.saveRefreshToken(id, refresh_token, expiresAt);
-
-    return refresh_token;
-  }
-  async createVerifyToken(id, email) {
-    return jwt.sign({ id, email }, this.emailSecret, {
-      expiresIn: '5m',
-    });
-  }
 }
 
-export const authService = new AuthService({
-  jwtSecret: process.env.JWT_SECRET,
-  refreshSecret: process.env.REFRESH_SECRET,
-  emailSecret: process.env.EMAIL_SECRET,
-});
+export const authService = new AuthService();
