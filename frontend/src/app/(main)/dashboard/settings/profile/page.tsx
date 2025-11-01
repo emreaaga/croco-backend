@@ -8,7 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/context/user-context";
-import { Pencil, Save, X, MailCheck, MailWarning } from "lucide-react";
+import { Pencil, Save, X, MailCheck, MailWarning, Loader2 } from "lucide-react";
+import { apiServer } from "@/lib/api-server";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const user = useUser();
@@ -19,18 +21,30 @@ export default function ProfilePage() {
   const toggleEdit = () => setEditMode((prev) => !prev);
 
   const handleVerify = async () => {
-    setVerifying(true);
-    // имитация API-запроса
-    await new Promise((r) => setTimeout(r, 2000));
-    setVerifying(false);
-    // показываем, будто письмо отправлено
-    alert("Письмо для подтверждения отправлено!");
+    try {
+      setVerifying(true);
+
+      const res = await apiServer("/auth/send-verification", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Не удалось отправить письмо");
+      }
+
+      toast.success("Письмо для подтверждения отправлено!");
+    } catch (err: any) {
+      toast.error(err.message || "Ошибка при отправке письма");
+    } finally {
+      setVerifying(false);
+    }
   };
 
   return (
     <div className="w-full space-y-6">
       <div className="border-border/40 bg-card/50 w-full space-y-6 rounded-lg border p-6 shadow-sm transition-all">
-        {/* Верх: аватар + кнопки */}
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-5">
             <Avatar className="ring-border h-20 w-20 ring-2">
@@ -73,9 +87,7 @@ export default function ProfilePage() {
 
         <Separator />
 
-        {/* Поля */}
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {/* Имя */}
           <div className="space-y-2">
             <Label htmlFor="name">Имя</Label>
             <Input
@@ -88,7 +100,6 @@ export default function ProfilePage() {
             />
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="email">Email</Label>
@@ -122,6 +133,7 @@ export default function ProfilePage() {
               <div className="space-y-1">
                 <p className="text-muted-foreground text-xs">Подтвердите почту.</p>
                 <Button size="sm" variant="secondary" onClick={handleVerify} disabled={verifying} className="text-xs">
+                  {verifying ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
                   {verifying ? "Отправка..." : "Отправить письмо"}
                 </Button>
               </div>
