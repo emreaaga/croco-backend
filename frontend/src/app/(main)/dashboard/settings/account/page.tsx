@@ -5,11 +5,53 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { useUser } from "@/context/user-context";
-import { ShieldCheck, ShieldOff } from "lucide-react";
+import { Loader2, ShieldOff } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { apiServer } from "@/lib/api-server";
 
 export default function AccountPage() {
-  const user = useUser();
+  const [loading, setLoading] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return toast.warning("Заполните все поля");
+    }
+    if (newPassword !== confirmPassword) {
+      return toast.error("Пароли не совпадают");
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await apiServer("/auth/change-password", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          old_password: oldPassword,
+          password: newPassword,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Ошибка при смене пароля");
+      }
+
+      toast.success("Пароль успешно изменён!");
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Не удалось изменить пароль");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -25,23 +67,42 @@ export default function AccountPage() {
           <div className="max-w-md space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="current-password">Текущий пароль</Label>
-              <Input id="current-password" type="password" placeholder="••••••••" />
+              <Input
+                id="current-password"
+                type="password"
+                placeholder="••••••••"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="new-password">Новый пароль</Label>
-              <Input id="new-password" type="password" placeholder="Введите новый пароль" />
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Введите новый пароль"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="confirm-password">Подтвердите пароль</Label>
-              <Input id="confirm-password" type="password" placeholder="Повторите новый пароль" />
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Повторите новый пароль"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
             </div>
           </div>
 
           <div className="flex justify-end">
-            <Button size="sm" className="w-fit">
-              Обновить пароль
+            <Button size="sm" onClick={handleChangePassword} disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? "Обновление..." : "Обновить пароль"}
             </Button>
           </div>
         </div>
