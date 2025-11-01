@@ -18,6 +18,7 @@ const sidebarNavItems = [
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const currentPage = sidebarNavItems.find((i) => i.href === pathname);
 
   return (
     <div className="space-y-2 p-2 pb-8 md:p-3">
@@ -43,7 +44,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                   variant="ghost"
                   className={cn(
                     "flex-shrink-0 justify-start px-2 py-1 text-xs whitespace-nowrap md:w-full md:text-sm",
-                    active && "bg-muted hover:bg-muted"
+                    active && "bg-muted hover:bg-muted",
                   )}
                 >
                   <Link href={item.href} className="flex items-center gap-2">
@@ -57,7 +58,11 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         </div>
 
         <div className="w-full flex-1 md:max-w-3xl">
-          <Card className="rounded-lg p-3 shadow-sm md:p-4 space-y-3">{children}</Card>
+          <Card className="space-y-3 rounded-lg p-3 shadow-sm md:p-4">
+            <h3 className="text-base font-medium md:text-lg">{currentPage?.title}</h3>
+            <Separator />
+            {children}
+          </Card>
         </div>
       </div>
     </div>
